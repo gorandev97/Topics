@@ -15,15 +15,41 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
-    // Compare the provided password with the hashed password stored in the database
     const isPasswordValid = await bcrypt.compare(pass, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: user.userId, email: user.email };
+    const payload = {
+      sub: user.userId,
+      email: user.email,
+      id: user.id,
+      profilePicture: user.profileImage,
+    };
+    return {
+      access_token: await this.jwtService.signAsync(payload, {
+        expiresIn: '24h',
+      }),
+    };
+  }
+
+  async registerUser(
+    email: string,
+    pass: string,
+    firstName: string,
+    lastName: string,
+  ): Promise<{ access_token: string }> {
+    const user = await this.usersService.create({
+      email,
+      password: pass,
+      firstName,
+      lastName,
+    });
+    if (!user) {
+      throw new Error("Can't create user");
+    }
+    const payload = { sub: user.userId, email: user.email, id: user.id };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
