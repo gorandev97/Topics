@@ -1,4 +1,3 @@
-// notification.gateway.ts
 import {
   WebSocketGateway,
   SubscribeMessage,
@@ -22,7 +21,7 @@ export class NotificationGateway implements OnGatewayInit {
     return { event: 'notification', data };
   }
 
-  emitNotification(notificationData: any) {
+  emitNotification(notificationData: Notification) {
     this.server.emit('notificationCreated', notificationData);
   }
   emitNumberOfNotifications(notificationsCount: number) {
