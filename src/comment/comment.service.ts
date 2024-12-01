@@ -23,10 +23,11 @@ export class CommentService {
     const { topicId, content } = createCommentDto;
     const user = await this.usersService.findOne(email);
     const topic = await this.topicsService.findOne(topicId);
-    this.notificationsService.createNotification(
-      topic.author.id,
-      `${user.firstName + ' ' + user.lastName} has commented on your ${topic.title} topic`,
-    );
+    if (topic.author.id !== user.id)
+      this.notificationsService.createNotification(
+        topic.author.id,
+        `${user.firstName + ' ' + user.lastName} has commented on your ${topic.title} topic`,
+      );
     return this.prisma.comment.create({
       data: {
         content,
