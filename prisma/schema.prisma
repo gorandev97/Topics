@@ -35,7 +35,7 @@ model Topic {
   postedBy      String
   likesCount    Int       @default(0)
   dislikesCount Int       @default(0)
-  author        User      @relation(fields: [postedBy], references: [id])
+  author        User      @relation(fields: [postedBy], references: [id], onDelete: Cascade)
   comments      Comment[]
   likes         Like[]
   createdAt     DateTime  @default(now())
@@ -50,7 +50,7 @@ model Comment {
   likesCount    Int      @default(0)
   dislikesCount Int      @default(0)
   topic         Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  author        User     @relation(fields: [postedBy], references: [id])
+  author        User     @relation(fields: [postedBy], references: [id], onDelete: Cascade)
   likes         Like[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -61,7 +61,7 @@ model Like {
   userId    String
   topicId   String?
   commentId String?
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   topic     Topic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
   comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
   isLike    Boolean
@@ -74,7 +74,7 @@ model Notification {
   userId    String
   content   String
   isRead    Boolean  @default(false)
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

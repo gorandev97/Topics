@@ -8,6 +8,7 @@ import {
   UseGuards,
   Request,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDTO } from './dto/createUser.dto';
@@ -40,5 +41,10 @@ export class UsersController {
   @Patch('/me')
   async updateMe(@Body() userData: UpdateUserDto, @Request() req) {
     return this.usersService.updateMe(req.user.id, userData);
+  }
+
+  @Delete('/delete')
+  remove(@Request() req) {
+    return this.usersService.remove(req.user.id);
   }
 }
