@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDTO } from './dto/createUser.dto';
-export type User = any;
+import { UserAlreadyExistsError } from 'src/exceptions/userExeptions';
+import { UpdateUserDto } from './dto/updateUser.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -15,7 +17,59 @@ export class UsersService {
       },
     });
   }
+
+  async getMe(id: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
+
+  async updateMe(id: string, userData: UpdateUserDto) {
+    if (userData.password) {
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      return this.prisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          ...userData,
+          password: hashedPassword,
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          profileImage: true,
+          password: false,
+        },
+      });
+    }
+    return this.prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        ...userData,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        profileImage: true,
+        password: false,
+      },
+    });
+  }
+
   async create(userData: CreateUserDTO): Promise<User> {
+    const user = await this.findOne(userData.email);
+    if (user) {
+      throw new UserAlreadyExistsError('User with that email already exists');
+    }
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     const newUser = await this.prisma.user.create({
       data: {
@@ -26,5 +80,28 @@ export class UsersService {
     });
 
     return newUser;
+  }
+
+  async getUsersByComments(skip: number, take: number) {
+    return await this.prisma.user.findMany({
+      skip,
+      take,
+      orderBy: {
+        comments: {
+          _count: 'desc',
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        profileImage: true,
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+      },
+    });
   }
 }

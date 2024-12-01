@@ -29,29 +29,31 @@ model User {
 }
 
 model Topic {
-  id          String    @id @default(uuid())
-  title       String
-  description String
-  postedBy    String
-  likesCount  Int       @default(0)
-  author      User      @relation(fields: [postedBy], references: [id])
-  comments    Comment[]
-  likes       Like[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  title         String
+  description   String
+  postedBy      String
+  likesCount    Int       @default(0)
+  dislikesCount Int       @default(0)
+  author        User      @relation(fields: [postedBy], references: [id])
+  comments      Comment[]
+  likes         Like[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Comment {
-  id         String   @id @default(uuid())
-  content    String
-  topicId    String
-  postedBy   String
-  likesCount Int      @default(0)
-  topic      Topic    @relation(fields: [topicId], references: [id])
-  author     User     @relation(fields: [postedBy], references: [id])
-  likes      Like[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String   @id @default(uuid())
+  content       String
+  topicId       String
+  postedBy      String
+  likesCount    Int      @default(0)
+  dislikesCount Int      @default(0)
+  topic         Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  author        User     @relation(fields: [postedBy], references: [id])
+  likes         Like[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Like {
@@ -60,8 +62,9 @@ model Like {
   topicId   String?
   commentId String?
   user      User     @relation(fields: [userId], references: [id])
-  topic     Topic?   @relation(fields: [topicId], references: [id])
-  comment   Comment? @relation(fields: [commentId], references: [id])
+  topic     Topic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  isLike    Boolean
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
