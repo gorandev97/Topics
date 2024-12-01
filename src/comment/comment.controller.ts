@@ -10,6 +10,7 @@ import {
   Request,
   Query,
   ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -35,18 +36,13 @@ export class CommentController {
     return this.commentService.findManyByTopicId(skip, take, topicId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.commentService.findOne(+id);
-  }
-
-  @Patch(':id')
+  @Put(':id')
   async editComment(
     @Param('id') id: string,
-    @Body('content') content: string,
+    @Body() commentData: UpdateCommentDto,
     @Request() req,
   ) {
-    return this.commentService.editComment(id, content, req.user.email);
+    return this.commentService.editComment(id, commentData, req.user.id);
   }
 
   @Delete(':id')

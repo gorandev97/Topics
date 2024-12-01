@@ -3,13 +3,13 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
   Request,
   Query,
   ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
@@ -23,7 +23,6 @@ export class TopicsController {
 
   @Post()
   create(@Body() createTopicDto: CreateTopicDto, @Request() req) {
-    console.log(req.user);
     return this.topicsService.create(createTopicDto, req.user.email);
   }
 
@@ -33,6 +32,15 @@ export class TopicsController {
     @Query('take', ParseIntPipe) take = 10,
   ) {
     return this.topicsService.findAll(skip, take);
+  }
+
+  @Get('/user')
+  async findAllCreatedByMe(
+    @Query('skip', ParseIntPipe) skip = 0,
+    @Query('take', ParseIntPipe) take = 10,
+    @Request() req,
+  ) {
+    return this.topicsService.findAllCreatedByMe(skip, take, req.user.id);
   }
 
   @Get('/like')
@@ -48,13 +56,17 @@ export class TopicsController {
     return this.topicsService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTopicDto: UpdateTopicDto) {
-    return this.topicsService.update(+id, updateTopicDto);
+  @Put(':id')
+  update(
+    @Param('id') id: string,
+    @Body() updateTopicDto: UpdateTopicDto,
+    @Request() req,
+  ) {
+    return this.topicsService.update(id, updateTopicDto, req.user.id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.topicsService.remove(+id);
+  remove(@Param('id') id: string, @Request() req) {
+    return this.topicsService.remove(id, req.user.id);
   }
 }

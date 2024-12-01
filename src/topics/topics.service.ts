@@ -1,15 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class TopicsService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createTopicDto: CreateTopicDto, email: string) {
     return this.prisma.topic.create({
@@ -22,8 +18,8 @@ export class TopicsService {
     });
   }
 
-  findAll(skip: number, take: number) {
-    return this.prisma.topic.findMany({
+  async findAll(skip: number, take: number) {
+    return await this.prisma.topic.findMany({
       skip,
       take,
       orderBy: { createdAt: 'desc' },
@@ -38,8 +34,27 @@ export class TopicsService {
     });
   }
 
-  findAllByLikes(skip: number, take: number) {
-    return this.prisma.topic.findMany({
+  async findAllByLikes(skip: number, take: number) {
+    return await this.prisma.topic.findMany({
+      skip,
+      take,
+      orderBy: { likesCount: 'desc' },
+      include: {
+        _count: {
+          select: { comments: true },
+        },
+        comments: true,
+        likes: true,
+        author: true,
+      },
+    });
+  }
+
+  async findAllCreatedByMe(skip: number, take: number, userId: string) {
+    return await this.prisma.topic.findMany({
+      where: {
+        postedBy: userId,
+      },
       skip,
       take,
       orderBy: { likesCount: 'desc' },
@@ -55,16 +70,6 @@ export class TopicsService {
   }
 
   async findOne(id: string) {
-    const topic = await this.prisma.topic.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        comments: true,
-        likes: true,
-      },
-    });
-    console.log(topic);
     return await this.prisma.topic.findUnique({
       where: {
         id,
@@ -77,11 +82,46 @@ export class TopicsService {
     });
   }
 
-  update(id: number, updateTopicDto: UpdateTopicDto) {
-    return `This action updates a #${id} topic`;
+  async update(id: string, updateTopicDto: UpdateTopicDto, userId) {
+    const topic = await this.prisma.topic.findUnique({
+      where: { id },
+    });
+
+    if (!topic) {
+      throw new NotFoundException(`Topic with ID ${id} not found`);
+    }
+    if (topic.postedBy !== userId) {
+      throw new Error('You are not authorized to delete this topic.');
+    }
+    const updatedTopic = await this.prisma.topic.update({
+      where: { id },
+      data: {
+        title: updateTopicDto.title,
+        description: updateTopicDto.content,
+      },
+    });
+
+    return updatedTopic;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} topic`;
+  async remove(topicId: string, userId: string) {
+    const topic = await this.prisma.topic.findUnique({
+      where: {
+        id: topicId,
+      },
+    });
+    if (!topic) {
+      throw new Error('Topic not found.');
+    }
+
+    if (topic.postedBy !== userId) {
+      throw new Error('You are not authorized to delete this topic.');
+    }
+    return await this.prisma.topic.delete({
+      where: {
+        id: topicId,
+        postedBy: userId,
+      },
+    });
   }
 }

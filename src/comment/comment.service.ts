@@ -7,16 +7,26 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { TopicsService } from 'src/topics/topics.service';
 
 @Injectable()
 export class CommentService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
     private readonly usersService: UsersService,
+    private readonly topicsService: TopicsService,
   ) {}
 
   async create(createCommentDto: CreateCommentDto, email: string) {
     const { topicId, content } = createCommentDto;
+    const user = await this.usersService.findOne(email);
+    const topic = await this.topicsService.findOne(topicId);
+    this.notificationsService.createNotification(
+      topic.author.id,
+      `${user.firstName + ' ' + user.lastName} has commented on your ${topic.title} topic`,
+    );
     return this.prisma.comment.create({
       data: {
         content,
@@ -43,18 +53,33 @@ export class CommentService {
       },
       include: {
         author: true,
-        likes: true,
+        likes: {
+          include: {
+            user: true,
+          },
+        },
       },
       orderBy: { likesCount: 'desc' },
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} comment`;
-  }
+  async update(id: string, updateTopicDto: UpdateCommentDto) {
+    const existingComment = await this.prisma.comment.findUnique({
+      where: { id },
+    });
 
-  update(id: number, updateCommentDto: UpdateCommentDto) {
-    return `This action updates a #${id} comment`;
+    if (!existingComment) {
+      throw new NotFoundException(`Comment with ID ${id} not found`);
+    }
+
+    const updatedTopic = await this.prisma.comment.update({
+      where: { id },
+      data: {
+        content: updateTopicDto.content,
+      },
+    });
+
+    return updatedTopic;
   }
 
   async deleteComment(commentId: string, userId: string) {
@@ -67,7 +92,7 @@ export class CommentService {
       throw new NotFoundException('Comment not found');
     }
 
-    if (comment.postedBy !== userId && comment.topic.postedBy !== userId) {
+    if (comment.postedBy !== userId) {
       throw new ForbiddenException(
         'You are not allowed to delete this comment',
       );
@@ -78,8 +103,12 @@ export class CommentService {
     });
   }
 
-  async editComment(commentId: string, content: string, email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email: email } });
+  async editComment(
+    commentId: string,
+    commentData: UpdateCommentDto,
+    id: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
     const comment = await this.prisma.comment.findUnique({
       where: { id: commentId },
     });
@@ -93,7 +122,7 @@ export class CommentService {
     }
     return this.prisma.comment.update({
       where: { id: commentId },
-      data: { content },
+      data: { content: commentData.content },
     });
   }
 }

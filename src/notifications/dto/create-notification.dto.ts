@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class UpdateTopicDto {
+export class CreateNotificationDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
+  userId: string;
 
   @IsString()
   @IsNotEmpty()

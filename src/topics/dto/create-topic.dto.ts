@@ -1,5 +1,4 @@
 import { IsString, IsInt, IsOptional } from 'class-validator';
-import { IsUUID } from 'class-validator';
 
 export class CreateTopicDto {
   @IsString()

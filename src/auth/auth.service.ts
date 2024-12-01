@@ -1,13 +1,23 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { EmailService } from './email.service';
+import { UpdateUserDto } from 'src/users/dto/updateUser.dto';
+import { ConfigService } from '@nestjs/config';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private emailService: EmailService,
+    private configService: ConfigService,
   ) {}
 
   async signIn(email: string, pass: string): Promise<{ access_token: string }> {
@@ -22,7 +32,7 @@ export class AuthService {
     }
 
     const payload = {
-      sub: user.userId,
+      sub: user.id,
       email: user.email,
       id: user.id,
       profilePicture: user.profileImage,
@@ -49,9 +59,37 @@ export class AuthService {
     if (!user) {
       throw new Error("Can't create user");
     }
-    const payload = { sub: user.userId, email: user.email, id: user.id };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      id: user.id,
+      profilePicture: user.profileImage,
     };
+    return {
+      access_token: await this.jwtService.signAsync(payload, {
+        expiresIn: '24h',
+      }),
+    };
+  }
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.usersService.findOne(email);
+    if (!user) {
+      throw new NotFoundException(`No user found for email: ${email}`);
+    }
+    await this.emailService.sendResetPasswordLink(email);
+  }
+  async resetPassword(password: string, token: string) {
+    const decoded = this.jwtService.verify(token, {
+      secret: this.configService.get<string>('JWT_SECRET'),
+    });
+    const user = await this.usersService.findOne(decoded.email);
+    if (!user) throw new NotFoundException('User not found');
+    const userData: UpdateUserDto = {
+      firstName: undefined,
+      lastName: undefined,
+      email: undefined,
+      password: password,
+    };
+    this.usersService.updateMe(user.id, userData);
   }
 }

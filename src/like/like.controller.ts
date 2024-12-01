@@ -1,12 +1,10 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   UseGuards,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { LikeService } from './like.service';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -28,24 +26,25 @@ export class LikeController {
     },
   ) {
     const { userId, targetId, isTopic, isLike } = body.likeCredentials;
-    console.log('usao u controller', body);
     if (!userId || !targetId || isLike === undefined || isTopic === undefined) {
-      return { error: 'Missing required parameters' };
+      throw new HttpException(
+        'Missing required parameters',
+        HttpStatus.BAD_REQUEST,
+      );
     }
-    console.log('usao u controller');
     try {
-      await this.likeService.toggleLikeDislike(
+      return await this.likeService.toggleLikeDislike(
         userId,
         targetId,
         isTopic,
         isLike,
       );
-      return { message: 'Like/dislike action successful' };
     } catch (error) {
       console.error(error);
-      return {
-        error: 'Something went wrong while processing the like/dislike',
-      };
+      throw new HttpException(
+        error || 'An error occurred',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
