@@ -26,8 +26,14 @@ export class NotificationsService {
         isRead: false,
       },
     });
-    this.notificationGateway.emitNumberOfNotifications(notifications.length);
-    this.notificationGateway.emitUnreadNotifications(notifications);
+    this.notificationGateway.emitNumberOfNotifications({
+      notificationsCount: notifications.length,
+      id: userId,
+    });
+    this.notificationGateway.emitUnreadNotifications({
+      unreadNotifications: notifications,
+      id: userId,
+    });
     return notification;
   }
 
@@ -56,6 +62,9 @@ export class NotificationsService {
         isRead: false,
       },
     });
-    this.notificationGateway.emitNumberOfNotifications(count);
+    this.notificationGateway.emitNumberOfNotifications({
+      notificationsCount: count,
+      id: userId,
+    });
   }
 }

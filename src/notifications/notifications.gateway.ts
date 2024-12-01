@@ -24,10 +24,16 @@ export class NotificationGateway implements OnGatewayInit {
   emitNotification(notificationData: Notification) {
     this.server.emit('notificationCreated', notificationData);
   }
-  emitNumberOfNotifications(notificationsCount: number) {
+  emitNumberOfNotifications(notificationsCount: {
+    notificationsCount: number;
+    id: string;
+  }) {
     this.server.emit('notificationsCount', notificationsCount);
   }
-  emitUnreadNotifications(unreadNotifications: Notification[]) {
+  emitUnreadNotifications(unreadNotifications: {
+    unreadNotifications: Notification[];
+    id: string;
+  }) {
     this.server.emit('unreadNotifications', unreadNotifications);
   }
 }
