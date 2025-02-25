@@ -4,7 +4,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDTO } from './dto/createUser.dto';
 import { UserAlreadyExistsError } from 'src/exceptions/userExeptions';
 import { UpdateUserDto } from './dto/updateUser.dto';
+import { UserInterface } from './interface/user';
 import { User } from '@prisma/client';
+
 
 @Injectable()
 export class UsersService {
@@ -18,11 +20,19 @@ export class UsersService {
     });
   }
 
-  async getMe(id: string): Promise<User | null> {
+  async getMe(id: string): Promise<UserInterface | null> {
     return this.prisma.user.findUnique({
       where: {
-        id,
+      id,
       },
+      select: {
+        firstName: true,
+        lastName: true,
+        email: true,
+        profileImage: true,
+        id: true,
+      }
+
     });
   }
 
