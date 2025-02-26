@@ -16,6 +16,7 @@ import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { ReplyCommentDto } from './dto/create-reply.dto';
 
 @UseGuards(AuthGuard)
 @Controller('comment')
@@ -25,6 +26,11 @@ export class CommentController {
   @Post()
   create(@Body() createCommentDto: CreateCommentDto, @Request() req) {
     return this.commentService.create(createCommentDto, req.user.email);
+  }
+
+  @Post('/reply')
+  reply(@Body() replyCommentData: ReplyCommentDto, @Request() req) {
+    return this.commentService.replyToComment(replyCommentData, req.user.email);
   }
 
   @Get('/like')

@@ -9,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { TopicsService } from 'src/topics/topics.service';
+import { ReplyCommentDto } from './dto/create-reply.dto';
 
 @Injectable()
 export class CommentService {
@@ -45,12 +46,47 @@ export class CommentService {
     });
   }
 
+  async replyToComment(replyToComment: ReplyCommentDto, email: string) {
+    const { topicId, content, commentId } = replyToComment;
+    const user = await this.usersService.findOne(email);
+    const topic = await this.topicsService.findOne(topicId);
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+    if (topic.author.id !== user.id)
+      this.notificationsService.createNotification(
+        topic.author.id,
+        `${user.firstName + ' ' + user.lastName} has replied to your comment`,
+      );
+    return this.prisma.comment.create({
+      data: {
+        content,
+        topic: {
+          connect: {
+            id: topicId,
+          },
+        },
+        author: {
+          connect: {
+            email: email,
+          },
+        },
+        parentComment: {
+          connect: {
+            id: commentId,
+          },
+        },
+      },
+    });
+  }
+
   async findManyByTopicId(skip: number, take: number, id: string) {
     return await this.prisma.comment.findMany({
       skip,
       take,
       where: {
         topicId: id,
+        parentCommentId: null,
       },
       include: {
         author: true,
@@ -58,6 +94,12 @@ export class CommentService {
           include: {
             user: true,
           },
+        },
+        replies: {
+          include: {
+            author: true,
+          },
+          orderBy: { likesCount: 'desc' },
         },
       },
       orderBy: { likesCount: 'desc' },
