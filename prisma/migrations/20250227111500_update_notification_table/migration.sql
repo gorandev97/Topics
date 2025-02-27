@@ -5,7 +5,9 @@
 
 */
 -- AlterTable
-ALTER TABLE "Notification" ADD COLUMN "topicId" TEXT DEFAULT 'default_topic_id';
+ALTER TABLE "Notification" ADD COLUMN "topicId" TEXT;
+
+INSERT INTO "Topic" ("id") VALUES ('default_topic_id') ON CONFLICT DO NOTHING;
 
 UPDATE "Notification" SET "topicId" = 'default_topic_id' WHERE "topicId" IS NULL;
 
