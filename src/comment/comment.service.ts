@@ -145,7 +145,7 @@ export class CommentService {
     const comments = await this.prisma.comment.deleteMany({
       where: { parentCommentId: commentId },
     });
-    console.log(comments);
+
     return this.prisma.comment.delete({
       where: { id: commentId },
     });
