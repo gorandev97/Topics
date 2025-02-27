@@ -8,4 +8,8 @@ export class CreateNotificationDto {
   @IsString()
   @IsNotEmpty()
   content: string;
+
+  @IsString()
+  @IsNotEmpty()
+  topicId: string;
 }

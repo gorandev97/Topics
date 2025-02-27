@@ -21,7 +21,10 @@ export class NotificationGateway implements OnGatewayInit {
     return { event: 'notification', data };
   }
 
-  emitNotification(notificationData: Notification) {
+  emitNotification(notificationData: {
+    notification: Notification;
+    topicId: string;
+  }) {
     this.server.emit('notificationCreated', notificationData);
   }
   emitNumberOfNotifications(notificationsCount: {

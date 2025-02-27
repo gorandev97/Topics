@@ -28,6 +28,7 @@ export class CommentService {
       this.notificationsService.createNotification(
         topic.author.id,
         `${user.firstName + ' ' + user.lastName} has commented on your ${topic.title} topic`,
+        topic.id,
       );
     return this.prisma.comment.create({
       data: {
@@ -57,6 +58,7 @@ export class CommentService {
       this.notificationsService.createNotification(
         topic.author.id,
         `${user.firstName + ' ' + user.lastName} has replied to your comment`,
+        topicId,
       );
     return this.prisma.comment.create({
       data: {
@@ -140,7 +142,10 @@ export class CommentService {
         'You are not allowed to delete this comment',
       );
     }
-
+    const comments = await this.prisma.comment.deleteMany({
+      where: { parentCommentId: commentId },
+    });
+    console.log(comments);
     return this.prisma.comment.delete({
       where: { id: commentId },
     });
