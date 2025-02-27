@@ -78,7 +78,7 @@ model Notification {
   id        String   @id @default(uuid())
   userId    String
   content   String
-  topicId   String   @default("default_topic_id")
+  topicId   String   
   topic     Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade) 
   isRead    Boolean  @default(false)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
