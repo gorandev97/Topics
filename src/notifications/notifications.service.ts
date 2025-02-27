@@ -13,13 +13,14 @@ export class NotificationsService {
   async createNotification(
     userId: string,
     content: string,
+    topicId: string,
   ): Promise<Notification> {
     const notification = await this.prisma.notification.create({
-      data: { userId, content },
+      data: { userId, content, topicId },
     });
 
     this.notificationGateway.handleNotificationCreated(notification);
-    this.notificationGateway.emitNotification(notification);
+    this.notificationGateway.emitNotification({ notification, topicId });
     const notifications = await this.prisma.notification.findMany({
       where: {
         userId,
@@ -39,10 +40,25 @@ export class NotificationsService {
 
   async getUnreadNotificationsForUser(userId: string) {
     const unreadNotifications = await this.prisma.notification.findMany({
-      where: { isRead: false, userId },
+      where: {
+        OR: [
+          { isRead: false, userId },
+          {
+            isRead: true,
+            userId,
+            createdAt: {
+              gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+            },
+          },
+        ],
+      },
+      orderBy: {
+        isRead: 'asc',
+      },
     });
+    const unreadCount = unreadNotifications.filter((n) => !n.isRead).length;
     return {
-      count: unreadNotifications.length,
+      count: unreadCount,
       notifications: unreadNotifications,
     };
   }

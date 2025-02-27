@@ -21,6 +21,7 @@ export class NotificationsController {
     return this.notificationService.createNotification(
       notificationData.userId,
       notificationData.content,
+      notificationData.topicId,
     );
   }
 
