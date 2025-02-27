@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TopicCategory } from '@prisma/client';
 
 @Injectable()
 export class TopicsService {
@@ -11,6 +12,7 @@ export class TopicsService {
     return this.prisma.topic.create({
       data: {
         ...createTopicDto,
+        category: createTopicDto.category as TopicCategory,
         author: {
           connect: { email: email },
         },
@@ -18,8 +20,19 @@ export class TopicsService {
     });
   }
 
-  async findAll(skip: number, take: number) {
+  async findAll(
+    skip: number,
+    take: number,
+    search?: string,
+    category?: string,
+  ) {
     return await this.prisma.topic.findMany({
+      where: {
+        AND: [
+          search ? { title: { contains: search, mode: 'insensitive' } } : {},
+          category ? { category: category as TopicCategory } : {},
+        ],
+      },
       skip,
       take,
       orderBy: { createdAt: 'desc' },
@@ -34,8 +47,19 @@ export class TopicsService {
     });
   }
 
-  async findAllByLikes(skip: number, take: number) {
+  async findAllByLikes(
+    skip: number,
+    take: number,
+    search?: string,
+    category?: string,
+  ) {
     return await this.prisma.topic.findMany({
+      where: {
+        AND: [
+          search ? { title: { contains: search, mode: 'insensitive' } } : {},
+          category ? { category: category as TopicCategory } : {},
+        ],
+      },
       skip,
       take,
       orderBy: { likesCount: 'desc' },
@@ -50,10 +74,20 @@ export class TopicsService {
     });
   }
 
-  async findAllCreatedByMe(skip: number, take: number, userId: string) {
+  async findAllCreatedByMe(
+    skip: number,
+    take: number,
+    userId: string,
+    search?: string,
+    category?: string,
+  ) {
     return await this.prisma.topic.findMany({
       where: {
-        postedBy: userId,
+        AND: [
+          search ? { title: { contains: search, mode: 'insensitive' } } : {},
+          category ? { category: category as TopicCategory } : {},
+          { postedBy: userId },
+        ],
       },
       skip,
       take,
@@ -98,6 +132,7 @@ export class TopicsService {
       data: {
         title: updateTopicDto.title,
         description: updateTopicDto.content,
+        category: updateTopicDto.category as TopicCategory,
       },
     });
 

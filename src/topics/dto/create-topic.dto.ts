@@ -10,4 +10,7 @@ export class CreateTopicDto {
   @IsInt()
   @IsOptional()
   likesCount?: number;
+
+  @IsString()
+  category: string;
 }

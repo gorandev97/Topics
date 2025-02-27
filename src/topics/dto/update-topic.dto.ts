@@ -8,4 +8,8 @@ export class UpdateTopicDto {
   @IsString()
   @IsNotEmpty()
   content: string;
+
+  @IsString()
+  @IsNotEmpty()
+  category: string;
 }

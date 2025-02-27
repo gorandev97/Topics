@@ -30,25 +30,38 @@ export class TopicsController {
   async findAll(
     @Query('skip', ParseIntPipe) skip = 0,
     @Query('take', ParseIntPipe) take = 10,
+    @Query('search') search?: string,
+    @Query('category') category?: string,
   ) {
-    return this.topicsService.findAll(skip, take);
+    return this.topicsService.findAll(skip, take, search, category);
   }
 
   @Get('/user')
   async findAllCreatedByMe(
     @Query('skip', ParseIntPipe) skip = 0,
     @Query('take', ParseIntPipe) take = 10,
+
     @Request() req,
+    @Query('search') search?: string,
+    @Query('category') category?: string,
   ) {
-    return this.topicsService.findAllCreatedByMe(skip, take, req.user.id);
+    return this.topicsService.findAllCreatedByMe(
+      skip,
+      take,
+      req.user.id,
+      search,
+      category,
+    );
   }
 
   @Get('/like')
   async findAllByLikes(
     @Query('skip', ParseIntPipe) skip = 0,
     @Query('take', ParseIntPipe) take = 10,
+    @Query('search') search?: string,
+    @Query('category') category?: string,
   ) {
-    return this.topicsService.findAllByLikes(skip, take);
+    return this.topicsService.findAllByLikes(skip, take, search, category);
   }
 
   @Get(':id')
