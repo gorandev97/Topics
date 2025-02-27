@@ -5,7 +5,12 @@
 
 */
 -- AlterTable
-ALTER TABLE "Notification" ADD COLUMN     "topicId" TEXT NOT NULL;
+ALTER TABLE "Notification" ADD COLUMN "topicId" TEXT DEFAULT 'default_topic_id';
+
+UPDATE "Notification" SET "topicId" = 'default_topic_id' WHERE "topicId" IS NULL;
+
+ALTER TABLE "Notification" ALTER COLUMN "topicId" SET NOT NULL;
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_topicId_fkey" FOREIGN KEY ("topicId") REFERENCES "Topic"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Notification" ALTER COLUMN "topicId" SET DEFAULT 'default_topic_id';
