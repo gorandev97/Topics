@@ -10,8 +10,11 @@ import {
   Query,
   ParseIntPipe,
   Put,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { TopicsService } from './topics.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -22,8 +25,13 @@ export class TopicsController {
   constructor(private readonly topicsService: TopicsService) {}
 
   @Post()
-  create(@Body() createTopicDto: CreateTopicDto, @Request() req) {
-    return this.topicsService.create(createTopicDto, req.user.email);
+  @UseInterceptors(FileInterceptor('file'))
+  async create(
+    @Body() createTopicDto: CreateTopicDto,
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.topicsService.create(createTopicDto, req.user.email, file);
   }
 
   @Get()
@@ -70,12 +78,14 @@ export class TopicsController {
   }
 
   @Put(':id')
+  @UseInterceptors(FileInterceptor('file'))
   update(
     @Param('id') id: string,
     @Body() updateTopicDto: UpdateTopicDto,
     @Request() req,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.topicsService.update(id, updateTopicDto, req.user.id);
+    return this.topicsService.update(id, updateTopicDto, req.user.id, file);
   }
 
   @Delete(':id')
