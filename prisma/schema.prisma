@@ -53,6 +53,7 @@ model Topic {
   postedBy      String
   likesCount    Int            @default(0)
   dislikesCount Int            @default(0)
+  image         String?
   category      TopicCategory  @default(Miscellaneous)
   author        User           @relation(fields: [postedBy], references: [id], onDelete: Cascade)
   comments      Comment[]
